@@ -54,7 +54,7 @@ create table public.dispense_items (
   duration_days int not null check (duration_days > 0),
   created_at timestamptz not null default now(),
   constraint dispense_items_timing_valid check (
-    timing <@ array['morning', 'afternoon', 'night']::text[] and array_length(timing, 1) > 0
+    timing <@ array['morning', 'afternoon', 'night']::text[] and cardinality(timing) > 0
   )
 );
 create index dispense_items_dispense_id_idx on public.dispense_items (dispense_id);
