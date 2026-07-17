@@ -61,7 +61,9 @@ export default function Home() {
               onChange={(e) => {
                 setMobile(e.target.value);
                 setNotFound(false);
+                setName('');
               }}
+              disabled={loading}
               required
             />
             <Button type="submit" disabled={loading}>
