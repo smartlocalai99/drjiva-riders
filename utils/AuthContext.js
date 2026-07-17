@@ -44,12 +44,10 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    router.replace('/');
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
-    router.replace('/login');
   };
 
   return (
