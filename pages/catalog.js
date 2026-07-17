@@ -14,11 +14,21 @@ export default function Catalog() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const refresh = () => searchMedicines(query).then(setMedicines);
+  const refresh = () => {
+    const queryAtTime = query;
+    searchMedicines(queryAtTime).then((data) => {
+      if (query === queryAtTime) setMedicines(data);
+    });
+  };
 
   useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let active = true;
+    searchMedicines(query).then((data) => {
+      if (active) setMedicines(data);
+    });
+    return () => {
+      active = false;
+    };
   }, [query]);
 
   const handleAdd = async (e) => {
