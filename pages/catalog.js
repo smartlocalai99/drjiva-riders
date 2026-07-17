@@ -1,5 +1,5 @@
 // pages/catalog.js
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TopNav from '../components/ui/TopNav';
 import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
@@ -13,22 +13,22 @@ export default function Catalog() {
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const requestIdRef = useRef(0);
 
-  const refresh = () => {
-    const queryAtTime = query;
-    searchMedicines(queryAtTime).then((data) => {
-      if (query === queryAtTime) setMedicines(data);
+  const runSearch = (q) => {
+    const requestId = ++requestIdRef.current;
+    searchMedicines(q).then((data) => {
+      if (requestIdRef.current === requestId) {
+        setMedicines(data);
+      }
     });
   };
 
+  const refresh = () => runSearch(query);
+
   useEffect(() => {
-    let active = true;
-    searchMedicines(query).then((data) => {
-      if (active) setMedicines(data);
-    });
-    return () => {
-      active = false;
-    };
+    runSearch(query);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const handleAdd = async (e) => {
