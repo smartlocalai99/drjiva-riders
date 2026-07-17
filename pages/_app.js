@@ -1,28 +1,19 @@
 // pages/_app.js
 import '../styles/globals.css';
+import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
 import { AuthProvider } from '../utils/AuthContext';
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+
+const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', weight: ['500', '600'] });
+const plexSans = IBM_Plex_Sans({ subsets: ['latin'], variable: '--font-plex-sans', weight: ['400', '500', '600'] });
+const plexMono = IBM_Plex_Mono({ subsets: ['latin'], variable: '--font-plex-mono', weight: ['400', '500'] });
 
 function MyApp({ Component, pageProps }) {
-  const router = useRouter();
-
-  // Simple client‑side guard: public pages are /login only
-  useEffect(() => {
-    if (!router.isReady) return;
-    const publicPaths = ['/login'];
-    const path = router.pathname;
-    const patient = typeof window !== 'undefined' && localStorage.getItem('patient');
-    // If not on a public page and no patient, redirect to login
-    if (!publicPaths.includes(path) && !patient) {
-      router.replace('/login');
-    }
-  }, [router.isReady, router.pathname]);
-
   return (
-    <AuthProvider>
-      <Component {...pageProps} />
-    </AuthProvider>
+    <div className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable}`}>
+      <AuthProvider>
+        <Component {...pageProps} />
+      </AuthProvider>
+    </div>
   );
 }
 

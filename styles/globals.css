@@ -1,26 +1,33 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-ink: #1c2333;
+  --color-paper: #fbfaf7;
+  --color-surface: #ffffff;
+  --color-line: #e7e0d3;
+  --color-muted: #6b6355;
+  --color-primary: #e08a2c;
+  --color-primary-hover: #c06f1c;
+  --color-morning: #f4c773;
+  --color-afternoon: #e08a2c;
+  --color-night: #2f6f63;
+  --color-success: #3e8e5a;
+  --color-danger: #b3492b;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-display: var(--font-fraunces), serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --radius-card: 10px;
+  --radius-control: 8px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.card-shadow {
+  box-shadow: 0 1px 2px rgba(27, 36, 48, 0.06);
 }
