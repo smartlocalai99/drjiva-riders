@@ -1,37 +1,59 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { mockDb } from './mockDb';
+import { supabase } from './supabaseClient';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [patient, setPatient] = useState(null);
+  const [session, setSession] = useState(null);
+  const [staffProfile, setStaffProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // persist in localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('patient');
-    if (stored) setPatient(JSON.parse(stored));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+    return () => listener.subscription.unsubscribe();
   }, []);
 
-  const login = async (mobile, otp) => {
-    if (otp !== '1234') throw new Error('Invalid OTP');
-    const p = await mockDb.upsertPatient({ mobile });
-    setPatient(p);
-    localStorage.setItem('patient', JSON.stringify(p));
-    router.replace('/dashboard');
+  useEffect(() => {
+    if (!session) {
+      setStaffProfile(null);
+      return;
+    }
+    supabase
+      .from('staff_profiles')
+      .select('id, full_name, hospital_id, hospitals ( id, name )')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => setStaffProfile(data));
+  }, [session]);
+
+  useEffect(() => {
+    if (loading || !router.isReady) return;
+    const isPublic = router.pathname === '/login';
+    if (!isPublic && !session) router.replace('/login');
+    if (isPublic && session) router.replace('/');
+  }, [loading, session, router.isReady, router.pathname]);
+
+  const login = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    router.replace('/');
   };
 
-  const logout = () => {
-    setPatient(null);
-    localStorage.removeItem('patient');
+  const logout = async () => {
+    await supabase.auth.signOut();
     router.replace('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ patient, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ session, staffProfile, loading, login, logout }}>{children}</AuthContext.Provider>
   );
 }
 

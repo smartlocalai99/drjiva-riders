@@ -1,54 +1,50 @@
 // pages/login.js
 import { useState } from 'react';
 import { useAuth } from '../utils/AuthContext';
-import { useRouter } from 'next/router';
+import Card from '../components/ui/Card';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
 
 export default function Login() {
-  const [mobile, setMobile] = useState('');
-  const [otp, setOtp] = useState('1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     try {
-      await login(mobile, otp);
-      router.replace('/patient');
+      await login(email, password);
     } catch (err) {
-      alert(err.message);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-      <form
-        onSubmit={handleSubmit}
-        className="glass rounded-lg p-8 shadow-xl w-96"
-      >
-        <h1 className="text-2xl mb-4 text-center">Shop Login</h1>
-        <input
-          type="tel"
-          placeholder="Mobile number"
-          value={mobile}
-          onChange={(e) => setMobile(e.target.value)}
-          className="w-full p-2 mb-4 rounded bg-white/10"
-          required
-        />
-        <input
-          type="text"
-          placeholder="OTP (demo = 1234)"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          className="w-full p-2 mb-6 rounded bg-white/10"
-          required
-        />
-        <button
-          type="submit"
-          className="w-full bg-primary hover:bg-primary/80 py-2 rounded transition"
-        >
-          Sign in
-        </button>
-      </form>
+    <div className="flex min-h-screen items-center justify-center bg-paper px-4">
+      <Card className="w-full max-w-sm">
+        <h1 className="font-display text-2xl font-semibold text-ink mb-1">Medico Kadapa</h1>
+        <p className="text-sm text-muted mb-6">Staff sign in</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          {error && <p className="text-sm text-danger">{error}</p>}
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'Signing in…' : 'Sign in'}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }
