@@ -28,7 +28,6 @@ export default function Catalog() {
 
   useEffect(() => {
     runSearch(query);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const handleAdd = async (e) => {
