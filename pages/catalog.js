@@ -13,15 +13,23 @@ export default function Catalog() {
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [searchError, setSearchError] = useState('');
   const requestIdRef = useRef(0);
 
   const runSearch = (q) => {
     const requestId = ++requestIdRef.current;
-    searchMedicines(q).then((data) => {
-      if (requestIdRef.current === requestId) {
-        setMedicines(data);
-      }
-    });
+    searchMedicines(q)
+      .then((data) => {
+        if (requestIdRef.current === requestId) {
+          setSearchError('');
+          setMedicines(data);
+        }
+      })
+      .catch((err) => {
+        if (requestIdRef.current === requestId) {
+          setSearchError(err.message);
+        }
+      });
   };
 
   const refresh = () => runSearch(query);
@@ -74,6 +82,7 @@ export default function Catalog() {
         </Card>
 
         <Input placeholder="Search catalog" value={query} onChange={(e) => setQuery(e.target.value)} className="mb-4" />
+        {searchError && <p className="mb-4 text-sm text-danger">{searchError}</p>}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {medicines.map((med) => (
             <Card key={med.id} className="flex flex-col items-center text-center">

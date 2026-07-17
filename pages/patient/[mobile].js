@@ -7,7 +7,7 @@ import Button from '../../components/ui/Button';
 import DosageTimingPicker from '../../components/ui/DosageTimingPicker';
 import { findPatientByMobile } from '../../lib/patients';
 import { getDispenseHistory } from '../../lib/dispenses';
-import { getPatientReports } from '../../lib/reports';
+import { getPatientReports, getSignedReportUrl } from '../../lib/reports';
 
 export default function PatientProfile() {
   const router = useRouter();
@@ -16,27 +16,52 @@ export default function PatientProfile() {
   const [history, setHistory] = useState([]);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!mobile) return;
     (async () => {
       setLoading(true);
-      const p = await findPatientByMobile(mobile);
-      setPatient(p);
-      if (p) {
-        const [h, r] = await Promise.all([getDispenseHistory(p.id), getPatientReports(p.id)]);
-        setHistory(h);
-        setReports(r);
+      setError('');
+      try {
+        const p = await findPatientByMobile(mobile);
+        setPatient(p);
+        if (p) {
+          const [h, r] = await Promise.all([getDispenseHistory(p.id), getPatientReports(p.id)]);
+          setHistory(h);
+          setReports(r);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, [mobile]);
+
+  const handleViewReport = async (fileUrl) => {
+    try {
+      const url = await getSignedReportUrl(fileUrl);
+      window.open(url, '_blank');
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-paper">
         <TopNav />
         <p className="p-8 text-muted">Loading…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-paper">
+        <TopNav />
+        <p className="p-8 text-danger">{error}</p>
       </div>
     );
   }
@@ -115,6 +140,13 @@ export default function PatientProfile() {
                   {r.uploaded_by === 'hospital' ? 'Added by hospital' : 'Added by patient'}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => handleViewReport(r.file_url)}
+                className="text-sm font-medium text-ink underline"
+              >
+                View
+              </button>
             </Card>
           ))}
         </div>

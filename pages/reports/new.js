@@ -22,7 +22,9 @@ export default function NewReport() {
 
   useEffect(() => {
     if (!mobile) return;
-    findPatientByMobile(mobile).then(setPatient);
+    findPatientByMobile(mobile)
+      .then(setPatient)
+      .catch((err) => setError(err.message));
   }, [mobile]);
 
   const handleSubmit = async (e) => {
@@ -53,7 +55,7 @@ export default function NewReport() {
     return (
       <div className="min-h-screen bg-paper">
         <TopNav />
-        <p className="p-8 text-muted">Loading patient…</p>
+        {error ? <p className="p-8 text-danger">{error}</p> : <p className="p-8 text-muted">Loading patient…</p>}
       </div>
     );
   }
