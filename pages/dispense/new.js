@@ -35,7 +35,18 @@ export default function NewDispense() {
   }, [mobile]);
 
   useEffect(() => {
-    searchMedicines(query).then(setResults);
+    if (!query) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setResults([]);
+      return;
+    }
+    let active = true;
+    searchMedicines(query).then((data) => {
+      if (active) setResults(data);
+    });
+    return () => {
+      active = false;
+    };
   }, [query]);
 
   const addMedicine = (medicine) => {
