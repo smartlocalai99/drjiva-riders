@@ -1,25 +1,50 @@
 // components/ui/TopNav.js
-import { useAuth } from '../../utils/AuthContext';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useHospital } from '../../utils/HospitalContext';
+
+const LINKS = [
+  { href: '/', label: 'Dashboard' },
+  { href: '/patients', label: 'Patients' },
+  { href: '/catalog', label: 'Medicines' },
+  { href: '/hospitals', label: 'Hospitals' },
+];
 
 export default function TopNav() {
-  const { staffProfile, logout } = useAuth();
+  const router = useRouter();
+  const { hospitals, currentHospitalId, setCurrentHospitalId, loading } = useHospital();
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center justify-between bg-ink px-4 sm:px-6">
-      <span className="font-display text-lg font-semibold text-paper">Medico Kadapa</span>
-      <div className="flex items-center gap-3 text-sm text-paper/80">
-        {staffProfile && (
-          <span>
-            {staffProfile.full_name} · {staffProfile.hospitals?.name}
-          </span>
-        )}
-        <button
-          onClick={logout}
-          className="rounded-control border border-paper/30 px-3 py-1 text-paper hover:bg-paper/10"
-        >
-          Log out
-        </button>
+    <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 bg-ink px-4 sm:px-6">
+      <div className="flex items-center gap-6 min-w-0">
+        <span className="font-display text-lg font-semibold text-paper shrink-0">Medico Kadapa</span>
+        <nav className="hidden sm:flex items-center gap-4">
+          {LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`text-sm ${
+                router.pathname === link.href ? 'text-paper font-medium' : 'text-paper/70 hover:text-paper'
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
       </div>
+      <select
+        value={currentHospitalId ?? ''}
+        onChange={(e) => setCurrentHospitalId(e.target.value)}
+        disabled={loading || hospitals.length === 0}
+        className="rounded-control border border-paper/30 bg-ink px-3 py-1 text-sm text-paper shrink-0 max-w-[160px] sm:max-w-none"
+      >
+        {hospitals.length === 0 && <option value="">No hospitals</option>}
+        {hospitals.map((h) => (
+          <option key={h.id} value={h.id} className="text-ink">
+            {h.name}
+          </option>
+        ))}
+      </select>
     </header>
   );
 }
