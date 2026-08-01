@@ -4,12 +4,13 @@ import TopNav from '../components/ui/TopNav';
 import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import { searchMedicines, createMedicine, updateMedicineImage, uploadMedicineImage } from '../lib/medicines';
+import { searchMedicines, createMedicine, updateMedicine, updateMedicineImage, uploadMedicineImage } from '../lib/medicines';
 
 export default function Catalog() {
   const [query, setQuery] = useState('');
   const [medicines, setMedicines] = useState([]);
   const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -43,18 +44,31 @@ export default function Catalog() {
     setError('');
     setSaving(true);
     try {
-      const medicine = await createMedicine({ name: name.trim() });
+      const medicine = await createMedicine({ name: name.trim(), price: price ? Number(price) : null });
       if (file) {
         const imageUrl = await uploadMedicineImage(file, medicine.id);
         await updateMedicineImage(medicine.id, imageUrl);
       }
       setName('');
+      setPrice('');
       setFile(null);
       refresh();
     } catch (err) {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePriceChange = (id, value) => {
+    setMedicines((prev) => prev.map((m) => (m.id === id ? { ...m, price: value } : m)));
+  };
+
+  const handlePriceSave = async (id, value) => {
+    try {
+      await updateMedicine(id, { price: value === '' ? null : Number(value) });
+    } catch (err) {
+      setSearchError(err.message);
     }
   };
 
@@ -68,6 +82,15 @@ export default function Catalog() {
           <h2 className="font-display text-lg font-semibold text-ink mb-3">Add a medicine</h2>
           <form onSubmit={handleAdd} className="space-y-3">
             <Input placeholder="Medicine name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              mono
+              placeholder="Price (₹)"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
             <input
               type="file"
               accept="image/*"
@@ -85,13 +108,24 @@ export default function Catalog() {
         {searchError && <p className="mb-4 text-sm text-danger">{searchError}</p>}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {medicines.map((med) => (
-            <Card key={med.id} className="flex flex-col items-center text-center">
+            <Card key={med.id} className="flex flex-col items-center text-center p-3 sm:p-5">
               {med.image_url ? (
-                <img src={med.image_url} alt={med.name} className="h-16 w-16 rounded-control object-cover border border-line mb-2" />
+                <img src={med.image_url} alt={med.name} className="h-12 w-12 sm:h-16 sm:w-16 rounded-control object-cover border border-line mb-2" />
               ) : (
-                <div className="h-16 w-16 rounded-control border border-line bg-paper mb-2" />
+                <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-control border border-line bg-paper mb-2" />
               )}
-              <p className="text-sm font-medium text-ink">{med.name}</p>
+              <p className="text-xs sm:text-sm font-medium text-ink line-clamp-2 mb-2">{med.name}</p>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                mono
+                placeholder="Price"
+                value={med.price ?? ''}
+                onChange={(e) => handlePriceChange(med.id, e.target.value)}
+                onBlur={(e) => handlePriceSave(med.id, e.target.value)}
+                className="text-center text-xs"
+              />
             </Card>
           ))}
         </div>
