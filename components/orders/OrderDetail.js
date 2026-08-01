@@ -8,8 +8,16 @@ import {
   nextOrderActions,
   statusLabel,
 } from '../../lib/orderPresentation';
+import DispatchShare from './DispatchShare';
 
-const STEPS = ['placed', 'confirmed', 'preparing', 'out_for_delivery', 'delivered'];
+const STEPS = [
+  'placed',
+  'shared',
+  'assigned',
+  'collected',
+  'out_for_delivery',
+  'delivered',
+];
 
 function createdTime(value) {
   const date = new Date(value);
@@ -20,7 +28,7 @@ function createdTime(value) {
   }).format(date);
 }
 
-export default function OrderDetail({ busy, onClose, onStatus, order }) {
+export default function OrderDetail({ busy, onAssign, onClose, onStatus, order }) {
   if (!order) {
     return (
       <aside className="detail-empty">
@@ -125,6 +133,27 @@ export default function OrderDetail({ busy, onClose, onStatus, order }) {
         {order.hospital?.phone ? <p>{order.hospital.phone}</p> : null}
       </section>
 
+      {order.status === 'placed' || order.status === 'shared' ? (
+        <DispatchShare
+          busy={busy}
+          onShared={() => order.status === 'placed' ? onStatus('shared') : undefined}
+          order={order}
+        />
+      ) : null}
+
+      {order.riderName ? (
+        <section className="detail-section rider-summary">
+          <p className="section-kicker">Assigned rider</p>
+          <h3>{order.riderName}</h3>
+          <a className="phone-link" href={`tel:${order.riderPhone}`}>+91 {order.riderPhone}</a>
+          {order.status === 'assigned' ? (
+            <button className="button button-secondary" disabled={busy} onClick={onAssign} type="button">
+              Change rider
+            </button>
+          ) : null}
+        </section>
+      ) : null}
+
       {actions.length > 0 ? (
         <div className="detail-actions">
           {actions.map((action) => (
@@ -132,7 +161,7 @@ export default function OrderDetail({ busy, onClose, onStatus, order }) {
               className={`button button-${action.tone}`}
               disabled={busy}
               key={action.status}
-              onClick={() => onStatus(action.status)}
+              onClick={() => action.status === 'assign_rider' ? onAssign() : onStatus(action.status)}
               type="button"
             >
               {busy ? 'Updating…' : action.label}

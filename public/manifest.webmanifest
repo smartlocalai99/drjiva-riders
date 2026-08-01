@@ -1,7 +1,7 @@
 {
-  "name": "Asian Hospitals Order Desk",
-  "short_name": "Asian Orders",
-  "description": "Receive and manage DRJIVA medicine delivery orders.",
+  "name": "DRJIVA Order Dispatch",
+  "short_name": "DRJIVA Dispatch",
+  "description": "Share medicine orders with riders and manage delivery handoffs.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

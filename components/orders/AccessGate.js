@@ -41,7 +41,7 @@ export default function AccessGate({ onUnlock }) {
     event.preventDefault();
     const candidate = accessCode.trim();
     if (!candidate) {
-      setError('Enter the hospital access code.');
+      setError('Enter the dispatcher access code.');
       return;
     }
     setError('');
@@ -67,13 +67,13 @@ export default function AccessGate({ onUnlock }) {
         <div className="brand-mark" aria-hidden="true">
           <span>+</span>
         </div>
-        <p className="eyebrow">Asian Multi Speciality Hospitals</p>
-        <h1 id="gate-title">Order desk</h1>
+        <p className="eyebrow">DRJIVA operations</p>
+        <h1 id="gate-title">Order dispatch</h1>
         <p className="gate-intro">
-          Receive and manage DRJIVA medicine deliveries from one installed app.
+          Receive orders, share them to your riders group, and record every delivery handoff.
         </p>
         <form className="gate-form" onSubmit={unlock}>
-          <label htmlFor="access-code">Hospital access code</label>
+          <label htmlFor="access-code">Dispatcher access code</label>
           <input
             autoCapitalize="characters"
             autoComplete="off"
@@ -87,7 +87,7 @@ export default function AccessGate({ onUnlock }) {
           />
           {error ? <p className="form-error" role="alert">{error}</p> : null}
           <button className="button button-primary button-wide" disabled={isChecking} type="submit">
-            {isChecking ? 'Checking…' : 'Open order desk'}
+            {isChecking ? 'Checking…' : 'Open dispatch'}
           </button>
         </form>
         <div className="gate-note">

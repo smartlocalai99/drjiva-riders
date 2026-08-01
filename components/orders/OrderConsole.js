@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
+  assignRider,
   getOrder,
   getOrderConsoleConfig,
   listOrders,
@@ -13,6 +14,7 @@ import NotificationSetup from './NotificationSetup';
 import OrderDetail from './OrderDetail';
 import OrderQueue from './OrderQueue';
 import PickupSettings from './PickupSettings';
+import RiderAssignment from './RiderAssignment';
 
 const FILTERS = [
   { key: 'active', label: 'Active' },
@@ -20,7 +22,13 @@ const FILTERS = [
   { key: 'cancelled', label: 'Cancelled' },
   { key: 'all', label: 'All orders' },
 ];
-const ACTIVE_STATUSES = new Set(['placed', 'confirmed', 'preparing', 'out_for_delivery']);
+const ACTIVE_STATUSES = new Set([
+  'placed',
+  'shared',
+  'assigned',
+  'collected',
+  'out_for_delivery',
+]);
 
 function matchesFilter(order, filter) {
   if (filter === 'all') return true;
@@ -39,6 +47,7 @@ export default function OrderConsole({ accessCode, onLock }) {
   const [statusBusy, setStatusBusy] = useState(false);
   const [error, setError] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [assignmentOpen, setAssignmentOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const refresh = useCallback(
@@ -149,6 +158,25 @@ export default function OrderConsole({ accessCode, onLock }) {
     }
   }
 
+  async function assignSelectedRider(rider) {
+    if (!selectedOrder || statusBusy) return;
+    setStatusBusy(true);
+    setError('');
+    try {
+      const updated = await assignRider(accessCode, selectedOrder.id, rider);
+      setOrders((current) =>
+        current.map((order) => (order.id === updated.id ? updated : order)),
+      );
+      setSelectedOrder(updated);
+      setAssignmentOpen(false);
+      setLastUpdated(new Date());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not assign this rider.');
+    } finally {
+      setStatusBusy(false);
+    }
+  }
+
   function lockConsole() {
     clearStoredAccessCode();
     onLock();
@@ -160,8 +188,8 @@ export default function OrderConsole({ accessCode, onLock }) {
         <div className="console-brand">
           <div className="brand-mark brand-mark-small" aria-hidden="true"><span>+</span></div>
           <div>
-            <p className="eyebrow">Asian Hospitals</p>
-            <h1>Order desk</h1>
+            <p className="eyebrow">DRJIVA operations</p>
+            <h1>Order dispatch</h1>
           </div>
         </div>
         <div className="header-actions">
@@ -176,12 +204,12 @@ export default function OrderConsole({ accessCode, onLock }) {
       <div className="console-content">
         <section className="console-summary" aria-labelledby="queue-heading">
           <div>
-            <p className="eyebrow">Today’s dispatch queue</p>
+            <p className="eyebrow">WhatsApp rider queue</p>
             <h2 id="queue-heading">
               {newCount > 0 ? `${newCount} new ${newCount === 1 ? 'order' : 'orders'}` : 'Orders are up to date'}
             </h2>
             <p className="summary-copy">
-              {activeCount} active · Cash collected at delivery
+              {activeCount} active · You control every rider handoff
             </p>
           </div>
           <button className="button button-secondary refresh-button" disabled={refreshing} onClick={() => void refresh({ quiet: true })} type="button">
@@ -247,6 +275,7 @@ export default function OrderConsole({ accessCode, onLock }) {
           <OrderDetail
             busy={statusBusy}
             onClose={closeOrder}
+            onAssign={() => setAssignmentOpen(true)}
             onStatus={(status) => void changeStatus(status)}
             order={selectedOrder}
           />
@@ -261,6 +290,14 @@ export default function OrderConsole({ accessCode, onLock }) {
           onSaved={(hospital) =>
             setConfig((current) => ({ ...current, hospital }))
           }
+        />
+      ) : null}
+      {assignmentOpen && selectedOrder ? (
+        <RiderAssignment
+          busy={statusBusy}
+          onAssign={(rider) => assignSelectedRider(rider)}
+          onClose={() => setAssignmentOpen(false)}
+          order={selectedOrder}
         />
       ) : null}
     </main>

@@ -47,6 +47,9 @@ export default function OrderQueue({ orders, onSelect, selectedId }) {
                 .map((item) => `${item.quantity}× ${item.name}`)
                 .join(' · ')}
             </span>
+            {order.riderName ? (
+              <span className="order-card-rider">Rider · {order.riderName}</span>
+            ) : null}
             <span className="order-card-bottomline">
               <span className={`status-chip status-${order.status}`}>
                 {statusLabel(order.status)}

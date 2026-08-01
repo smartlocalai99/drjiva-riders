@@ -39,12 +39,12 @@ export default function PickupSettings({ accessCode, hospital, onClose, onSaved 
         <header className="sheet-header">
           <div>
             <p className="eyebrow">Route origin</p>
-            <h2 id="pickup-title">Hospital pickup</h2>
+            <h2 id="pickup-title">Medicine pickup</h2>
           </div>
           <button className="icon-button" onClick={onClose} type="button" aria-label="Close settings">×</button>
         </header>
         <p className="sheet-intro">
-          This address becomes the starting point for every delivery route and is snapshotted on new orders.
+          This hospital address becomes the starting point for every rider route and is saved on new orders.
         </p>
         <form className="settings-form" onSubmit={save}>
           <label htmlFor="pickup-address">Complete hospital address</label>
