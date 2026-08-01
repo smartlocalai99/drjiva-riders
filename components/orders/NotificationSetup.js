@@ -13,7 +13,7 @@ function urlBase64ToUint8Array(value) {
   );
 }
 
-export default function NotificationSetup({ accessCode, vapidPublicKey }) {
+export default function NotificationSetup({ vapidPublicKey }) {
   const [subscription, setSubscription] = useState(null);
   const [supported, setSupported] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -96,7 +96,7 @@ export default function NotificationSetup({ accessCode, vapidPublicKey }) {
           userVisibleOnly: true,
         }));
       const serialized = current.toJSON();
-      await registerPushSubscription(accessCode, serialized, navigator.userAgent);
+      await registerPushSubscription(serialized, navigator.userAgent);
       setSubscription(current);
       setMessage('New-order notifications are enabled on this device.');
     } catch {
@@ -113,7 +113,7 @@ export default function NotificationSetup({ accessCode, vapidPublicKey }) {
     try {
       const endpoint = subscription.endpoint;
       await subscription.unsubscribe();
-      await removePushSubscription(accessCode, endpoint);
+      await removePushSubscription(endpoint);
       setSubscription(null);
       setMessage('Notifications are disabled on this device.');
     } catch {

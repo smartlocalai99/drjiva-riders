@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { savePickupLocation } from '../../lib/orders';
 
-export default function PickupSettings({ accessCode, hospital, onClose, onSaved }) {
+export default function PickupSettings({ hospital, onClose, onSaved }) {
   const [address, setAddress] = useState(hospital?.address ?? '');
   const [phone, setPhone] = useState(hospital?.phone ?? '');
   const [error, setError] = useState('');
@@ -17,7 +17,7 @@ export default function PickupSettings({ accessCode, hospital, onClose, onSaved 
     setBusy(true);
     setError('');
     try {
-      const updated = await savePickupLocation(accessCode, { address, phone });
+      const updated = await savePickupLocation({ address, phone });
       onSaved(updated);
       onClose();
     } catch (cause) {

@@ -9,7 +9,6 @@ import {
   subscribeToOrderEvents,
   updateOrderStatus,
 } from '../../lib/orders';
-import { clearStoredAccessCode } from './AccessGate';
 import NotificationSetup from './NotificationSetup';
 import OrderDetail from './OrderDetail';
 import OrderQueue from './OrderQueue';
@@ -36,7 +35,7 @@ function matchesFilter(order, filter) {
   return order.status === filter;
 }
 
-export default function OrderConsole({ accessCode, onLock }) {
+export default function OrderConsole() {
   const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [config, setConfig] = useState(null);
@@ -56,8 +55,8 @@ export default function OrderConsole({ accessCode, onLock }) {
       else setLoading(true);
       try {
         const [nextOrders, nextConfig] = await Promise.all([
-          listOrders(accessCode, 'all'),
-          getOrderConsoleConfig(accessCode),
+          listOrders('all'),
+          getOrderConsoleConfig(),
         ]);
         setOrders(nextOrders);
         setConfig(nextConfig);
@@ -79,7 +78,7 @@ export default function OrderConsole({ accessCode, onLock }) {
         setRefreshing(false);
       }
     },
-    [accessCode],
+    [],
   );
 
   useEffect(() => {
@@ -107,7 +106,7 @@ export default function OrderConsole({ accessCode, onLock }) {
       return () => window.clearTimeout(selectCurrent);
     }
     let active = true;
-    getOrder(accessCode, orderId)
+    getOrder(orderId)
       .then((order) => {
         if (active) setSelectedOrder(order);
       })
@@ -117,7 +116,7 @@ export default function OrderConsole({ accessCode, onLock }) {
     return () => {
       active = false;
     };
-  }, [accessCode, orders, router.isReady, router.query.order]);
+  }, [orders, router.isReady, router.query.order]);
 
   const displayedOrders = useMemo(
     () => orders.filter((order) => matchesFilter(order, filter)),
@@ -145,7 +144,7 @@ export default function OrderConsole({ accessCode, onLock }) {
     setStatusBusy(true);
     setError('');
     try {
-      const updated = await updateOrderStatus(accessCode, selectedOrder.id, status);
+      const updated = await updateOrderStatus(selectedOrder.id, status);
       setOrders((current) =>
         current.map((order) => (order.id === updated.id ? updated : order)),
       );
@@ -163,7 +162,7 @@ export default function OrderConsole({ accessCode, onLock }) {
     setStatusBusy(true);
     setError('');
     try {
-      const updated = await assignRider(accessCode, selectedOrder.id, rider);
+      const updated = await assignRider(selectedOrder.id, rider);
       setOrders((current) =>
         current.map((order) => (order.id === updated.id ? updated : order)),
       );
@@ -175,11 +174,6 @@ export default function OrderConsole({ accessCode, onLock }) {
     } finally {
       setStatusBusy(false);
     }
-  }
-
-  function lockConsole() {
-    clearStoredAccessCode();
-    onLock();
   }
 
   return (
@@ -197,7 +191,6 @@ export default function OrderConsole({ accessCode, onLock }) {
             <span className="live-dot" /> Live
           </span>
           <button className="icon-button" onClick={() => setSettingsOpen(true)} type="button" aria-label="Hospital pickup settings">⌂</button>
-          <button className="button button-quiet" onClick={lockConsole} type="button">Lock</button>
         </div>
       </header>
 
@@ -217,7 +210,7 @@ export default function OrderConsole({ accessCode, onLock }) {
           </button>
         </section>
 
-        <NotificationSetup accessCode={accessCode} vapidPublicKey={config?.vapidPublicKey} />
+        <NotificationSetup vapidPublicKey={config?.vapidPublicKey} />
 
         {!config?.hospital?.address ? (
           <button className="pickup-alert" onClick={() => setSettingsOpen(true)} type="button">
@@ -284,7 +277,6 @@ export default function OrderConsole({ accessCode, onLock }) {
 
       {settingsOpen ? (
         <PickupSettings
-          accessCode={accessCode}
           hospital={config?.hospital}
           onClose={() => setSettingsOpen(false)}
           onSaved={(hospital) =>
