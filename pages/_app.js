@@ -1,20 +1,27 @@
-// pages/_app.js
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+
 import '../styles/globals.css';
-import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
 import { HospitalProvider } from '../utils/HospitalContext';
 
-const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', weight: ['500', '600'] });
-const plexSans = IBM_Plex_Sans({ subsets: ['latin'], variable: '--font-plex-sans', weight: ['400', '500', '600'] });
-const plexMono = IBM_Plex_Mono({ subsets: ['latin'], variable: '--font-plex-mono', weight: ['400', '500'] });
+const plexSans = IBM_Plex_Sans({
+  display: 'swap',
+  subsets: ['latin'],
+  variable: '--font-plex-sans',
+  weight: ['400', '500', '600', '700'],
+});
+const plexMono = IBM_Plex_Mono({
+  display: 'swap',
+  subsets: ['latin'],
+  variable: '--font-plex-mono',
+  weight: ['500', '600'],
+});
 
-function MyApp({ Component, pageProps }) {
+export default function App({ Component, pageProps }) {
   return (
-    <div className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable}`}>
+    <div className={`${plexSans.variable} ${plexMono.variable}`}>
       <HospitalProvider>
         <Component {...pageProps} />
       </HospitalProvider>
     </div>
   );
 }
-
-export default MyApp;

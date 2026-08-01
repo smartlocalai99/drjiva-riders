@@ -10,6 +10,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Recoverable legacy patient route retained only because the original
+    // checkout has local edits; production redirects it to the order desk.
+    "pages/patient/**",
   ]),
 ]);
 
