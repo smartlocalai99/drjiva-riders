@@ -7,12 +7,12 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { findPatientByMobile } from '../../lib/patients';
 import { uploadPatientReport } from '../../lib/reports';
-import { useAuth } from '../../utils/AuthContext';
+import { useHospital } from '../../utils/HospitalContext';
 
 export default function NewReport() {
   const router = useRouter();
   const { patient: mobile } = router.query;
-  const { staffProfile } = useAuth();
+  const { currentHospital } = useHospital();
 
   const [patient, setPatient] = useState(null);
   const [label, setLabel] = useState('');
@@ -30,6 +30,10 @@ export default function NewReport() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!currentHospital) {
+      setError('Pick a hospital from the top bar first.');
+      return;
+    }
     if (!file) {
       setError('Choose a photo or PDF to attach.');
       return;
@@ -38,8 +42,8 @@ export default function NewReport() {
     try {
       await uploadPatientReport({
         patientId: patient.id,
-        hospitalId: staffProfile.hospital_id,
-        staffId: staffProfile.id,
+        hospitalId: currentHospital.id,
+        staffId: null,
         label: label.trim(),
         file,
       });

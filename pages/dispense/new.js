@@ -10,7 +10,7 @@ import DosageTimingPicker from '../../components/ui/DosageTimingPicker';
 import { findPatientByMobile } from '../../lib/patients';
 import { searchMedicines } from '../../lib/medicines';
 import { createDispense } from '../../lib/dispenses';
-import { useAuth } from '../../utils/AuthContext';
+import { useHospital } from '../../utils/HospitalContext';
 
 const FOOD_OPTIONS = [
   { value: 'before_food', label: 'Before food' },
@@ -20,11 +20,12 @@ const FOOD_OPTIONS = [
 export default function NewDispense() {
   const router = useRouter();
   const { patient: mobile } = router.query;
-  const { staffProfile } = useAuth();
+  const { currentHospital } = useHospital();
 
   const [patient, setPatient] = useState(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [focused, setFocused] = useState(false);
   const [items, setItems] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -37,11 +38,6 @@ export default function NewDispense() {
   }, [mobile]);
 
   useEffect(() => {
-    if (!query) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setResults([]);
-      return;
-    }
     let active = true;
     searchMedicines(query)
       .then((data) => {
@@ -61,7 +57,7 @@ export default function NewDispense() {
       { medicine, timing: [], foodInstruction: 'after_food', quantity: '1 tablet', durationDays: 5 },
     ]);
     setQuery('');
-    setResults([]);
+    setFocused(false);
   };
 
   const updateItem = (index, patch) => {
@@ -74,6 +70,10 @@ export default function NewDispense() {
 
   const handleSubmit = async () => {
     setError('');
+    if (!currentHospital) {
+      setError('Pick a hospital from the top bar first.');
+      return;
+    }
     if (items.length === 0) {
       setError('Add at least one medicine.');
       return;
@@ -86,8 +86,8 @@ export default function NewDispense() {
     try {
       await createDispense({
         patientId: patient.id,
-        hospitalId: staffProfile.hospital_id,
-        staffId: staffProfile.id,
+        hospitalId: currentHospital.id,
+        staffId: null,
         items: items.map((item) => ({
           medicineId: item.medicine.id,
           timing: item.timing,
@@ -125,22 +125,34 @@ export default function NewDispense() {
         <h1 className="font-display text-lg font-semibold text-ink mb-3">Add medicines</h1>
         <Card className="mb-6">
           <div className="relative">
-            <Input placeholder="Search medicine catalog" value={query} onChange={(e) => setQuery(e.target.value)} />
-            {results.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full rounded-control border border-line bg-surface shadow-lg">
+            <Input
+              placeholder="Search medicine catalog (click to show all)"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setFocused(true);
+              }}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+            />
+            {focused && results.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full max-h-60 overflow-y-auto rounded-control border border-line bg-surface shadow-lg">
                 {results.map((med) => (
                   <button
                     key={med.id}
                     type="button"
-                    onClick={() => addMedicine(med)}
-                    className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-paper"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      addMedicine(med);
+                    }}
+                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-paper transition-colors"
                   >
                     {med.image_url ? (
                       <img src={med.image_url} alt={med.name} className="h-8 w-8 rounded object-cover" />
                     ) : (
                       <div className="h-8 w-8 rounded bg-paper border border-line" />
                     )}
-                    <span className="text-sm text-ink">{med.name}</span>
+                    <span className="text-sm text-ink font-medium">{med.name}</span>
                   </button>
                 ))}
               </div>
@@ -170,12 +182,14 @@ export default function NewDispense() {
 
             <DosageTimingPicker value={item.timing} onChange={(timing) => updateItem(index, { timing })} />
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <SegmentedControl
-                options={FOOD_OPTIONS}
-                value={item.foodInstruction}
-                onChange={(v) => updateItem(index, { foodInstruction: v })}
-              />
+            <div className="mt-4 flex flex-col gap-3 sm:grid sm:grid-cols-3 sm:items-center">
+              <div className="flex justify-start">
+                <SegmentedControl
+                  options={FOOD_OPTIONS}
+                  value={item.foodInstruction}
+                  onChange={(v) => updateItem(index, { foodInstruction: v })}
+                />
+              </div>
               <Input
                 placeholder="Quantity, e.g. 1 tablet"
                 value={item.quantity}
