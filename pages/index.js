@@ -1,88 +1,49 @@
 // pages/index.js
-import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import TopNav from '../components/ui/TopNav';
 import Card from '../components/ui/Card';
-import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import { findPatientByMobile, createPatient } from '../lib/patients';
+import { getDashboardStats } from '../lib/dashboard';
 
-export default function Home() {
-  const [mobile, setMobile] = useState('');
-  const [notFound, setNotFound] = useState(false);
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
+const STATS = [
+  { key: 'patients', label: 'Patients' },
+  { key: 'medicines', label: 'Medicines' },
+  { key: 'hospitals', label: 'Hospitals' },
+  { key: 'dispenses', label: 'Dispenses' },
+];
+
+export default function Dashboard() {
+  const [stats, setStats] = useState(null);
   const [error, setError] = useState('');
-  const router = useRouter();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      const patient = await findPatientByMobile(mobile.trim());
-      if (patient) {
-        router.push(`/patient/${patient.mobile}`);
-      } else {
-        setNotFound(true);
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const patient = await createPatient({ mobile: mobile.trim(), name: name.trim() });
-      router.push(`/patient/${patient.mobile}`);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    getDashboardStats()
+      .then(setStats)
+      .catch((err) => setError(err.message));
+  }, []);
 
   return (
     <div className="min-h-screen bg-paper">
       <TopNav />
-      <main className="mx-auto max-w-xl px-4 py-10 sm:px-6">
-        <h1 className="font-display text-2xl font-semibold text-ink mb-6">Find a patient</h1>
-        <Card>
-          <form onSubmit={handleSearch} className="flex gap-3">
-            <Input
-              type="tel"
-              mono
-              placeholder="Patient mobile number"
-              value={mobile}
-              onChange={(e) => {
-                setMobile(e.target.value);
-                setNotFound(false);
-                setName('');
-              }}
-              disabled={loading}
-              required
-            />
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Searching…' : 'Search'}
-            </Button>
-          </form>
-          {error && <p className="mt-3 text-sm text-danger">{error}</p>}
-          {notFound && (
-            <div className="mt-5 border-t border-line pt-5">
-              <p className="mb-3 text-sm text-muted">No patient with this number yet — register them below.</p>
-              <div className="flex gap-3">
-                <Input placeholder="Patient name" value={name} onChange={(e) => setName(e.target.value)} required />
-                <Button variant="secondary" onClick={handleRegister} disabled={loading}>
-                  Register
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+        <h1 className="font-display text-2xl font-semibold text-ink mb-6">Dashboard</h1>
+
+        {error && <p className="mb-6 text-sm text-danger">{error}</p>}
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-8">
+          {STATS.map((stat) => (
+            <Card key={stat.key} className="text-center">
+              <p className="font-display text-2xl font-semibold text-ink">{stats ? stats[stat.key] : '—'}</p>
+              <p className="text-xs text-muted mt-1">{stat.label}</p>
+            </Card>
+          ))}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button href="/patients" className="w-full sm:w-auto">Patients</Button>
+          <Button variant="secondary" href="/catalog" className="w-full sm:w-auto">Medicines</Button>
+          <Button variant="secondary" href="/hospitals" className="w-full sm:w-auto">Hospitals</Button>
+        </div>
       </main>
     </div>
   );
