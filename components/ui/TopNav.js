@@ -12,12 +12,14 @@ const LINKS = [
 
 export default function TopNav() {
   const router = useRouter();
-  const { hospitals, currentHospitalId, setCurrentHospitalId, loading } = useHospital();
+  const { hospitals, currentHospitalId, setCurrentHospitalId, loading, error } = useHospital();
 
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 bg-ink px-4 sm:px-6">
       <div className="flex items-center gap-6 min-w-0">
-        <span className="font-display text-lg font-semibold text-paper shrink-0">Medico Kadapa</span>
+        <Link href="/" className="font-display text-lg font-semibold text-paper shrink-0">
+          Medico Kadapa
+        </Link>
         <nav className="hidden sm:flex items-center gap-4">
           {LINKS.map((link) => (
             <Link
@@ -32,19 +34,22 @@ export default function TopNav() {
           ))}
         </nav>
       </div>
-      <select
-        value={currentHospitalId ?? ''}
-        onChange={(e) => setCurrentHospitalId(e.target.value)}
-        disabled={loading || hospitals.length === 0}
-        className="rounded-control border border-paper/30 bg-ink px-3 py-1 text-sm text-paper shrink-0 max-w-[160px] sm:max-w-none"
-      >
-        {hospitals.length === 0 && <option value="">No hospitals</option>}
-        {hospitals.map((h) => (
-          <option key={h.id} value={h.id} className="text-ink">
-            {h.name}
-          </option>
-        ))}
-      </select>
+      <div className="flex flex-col items-end gap-0.5 shrink-0">
+        <select
+          value={currentHospitalId ?? ''}
+          onChange={(e) => setCurrentHospitalId(e.target.value)}
+          disabled={loading || hospitals.length === 0}
+          className="rounded-control border border-paper/30 bg-ink px-3 py-1 text-sm text-paper shrink-0 max-w-[160px] sm:max-w-none"
+        >
+          {hospitals.length === 0 && <option value="">No hospitals</option>}
+          {hospitals.map((h) => (
+            <option key={h.id} value={h.id} className="text-ink">
+              {h.name}
+            </option>
+          ))}
+        </select>
+        {error && <p className="text-sm text-danger">{error}</p>}
+      </div>
     </header>
   );
 }

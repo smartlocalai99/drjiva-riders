@@ -8,6 +8,7 @@ export function HospitalProvider({ children }) {
   const [hospitals, setHospitals] = useState([]);
   const [currentHospitalId, setCurrentHospitalIdState] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     listHospitals()
@@ -15,8 +16,13 @@ export function HospitalProvider({ children }) {
         setHospitals(data);
         const stored = window.localStorage.getItem(STORAGE_KEY);
         const validStored = data.find((h) => h.id === stored);
-        setCurrentHospitalIdState(validStored ? stored : data[0]?.id ?? null);
+        const nextId = validStored ? stored : data[0]?.id ?? null;
+        setCurrentHospitalIdState(nextId);
+        if (!validStored && nextId) {
+          window.localStorage.setItem(STORAGE_KEY, nextId);
+        }
       })
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -29,7 +35,7 @@ export function HospitalProvider({ children }) {
 
   return (
     <HospitalContext.Provider
-      value={{ hospitals, currentHospital, currentHospitalId, setCurrentHospitalId, loading }}
+      value={{ hospitals, currentHospital, currentHospitalId, setCurrentHospitalId, loading, error }}
     >
       {children}
     </HospitalContext.Provider>

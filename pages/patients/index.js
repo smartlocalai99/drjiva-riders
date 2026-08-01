@@ -1,5 +1,5 @@
 // pages/patients/index.js
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import TopNav from '../../components/ui/TopNav';
 import Card from '../../components/ui/Card';
@@ -17,14 +17,22 @@ export default function Patients() {
   const [patients, setPatients] = useState([]);
   const [listError, setListError] = useState('');
   const router = useRouter();
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
+    const requestId = ++requestIdRef.current;
     listPatients({ query })
       .then((data) => {
-        setListError('');
-        setPatients(data);
+        if (requestIdRef.current === requestId) {
+          setListError('');
+          setPatients(data);
+        }
       })
-      .catch((err) => setListError(err.message));
+      .catch((err) => {
+        if (requestIdRef.current === requestId) {
+          setListError(err.message);
+        }
+      });
   }, [query]);
 
   const handleSearch = async (e) => {
